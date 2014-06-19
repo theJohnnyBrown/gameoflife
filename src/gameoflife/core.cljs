@@ -5,20 +5,24 @@
                                      next-board]]))
 
 (def game-atom (atom {:paused true
-                      :board (create-board 12 12
-                               #{[1 1] [1 2] [1 3]})}))
+                      :board (create-board 12 12)}))
 
 
+(def blinker #{[1 1] [1 2] [1 3]})
+(def glider #{[0 3] [1 3] [2 3] [2 2] [1 1]})
+(defn set-pattern! [pattern]
+  (reset! game-atom (assoc @game-atom
+                      :board (create-board 12 12 pattern))))
 
+(defn set-glider! [] (set-pattern! glider))
+(defn set-blinker! [] (set-pattern! blinker))
 
 (defn frankenstein! [[row col]]
   "because we're giving life. Badump-tshh."
   (reset! game-atom
    (update-in @game-atom [:board row col] (constantly true))))
 
-(defn clear-board! []
-  (reset! game-atom (assoc @game-atom
-                      :board (create-board 12 12))))
+(defn clear-board! [] (set-pattern! #{}))
 
 (defn toggle-playstate! [e]
   (reset! game-atom
@@ -52,7 +56,15 @@
      (dom/a #js {:className (str "btn btn-playstate btn-danger")
                  :onClick clear-board!
                  :title "clear board"}
-        (dom/i #js {:className "fa fa-stop"}))))
+        (dom/i #js {:className "fa fa-stop"}))
+     (dom/a #js {:className (str "btn btn-playstate btn-primary")
+                 :onClick set-glider!
+                 :title "glider"}
+            "glider")
+     (dom/a #js {:className (str "btn btn-playstate btn-primary")
+                 :onClick set-blinker!
+                 :title "blinker"}
+            "blinker")))
    (dom/div #js {:id "tttboard"
                  :style #js {:width "75%"
                              :padding-bottom "75%"
@@ -72,4 +84,4 @@
    {:target (.-body js/document)}))
 
 (defn ^:export start []
-  (setup-ui!) (js/setInterval planck! 1000))
+  (setup-ui!) (js/setInterval planck! 200))

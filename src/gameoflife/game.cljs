@@ -8,7 +8,7 @@
   (let [alive (or _alive #{})]
    (vec (for [rownum (range height)]
           (vec (for [colnum (range width)]
-                 (if (alive [rownum colnum] true) false)))))))
+                 (if (alive [rownum colnum]) true false)))))))
 
 ;; see http://programmablelife.blogspot.com/2012/08/conways-game-of-life-in-clojure.html
 (defn count-live-neighbors [[rownum colnum] & [board]]
@@ -55,4 +55,8 @@
                                  (= cell "1")))))]
              (println (str (-> board next-board serialize-board)))))))))
 
-(set! *main-cli-fn* run-cli)
+(defn deleteme []
+  (enable-console-print!)
+  (println (serialize-board (create-board 5 5 #{[0 0]}))))
+
+(set! *main-cli-fn* deleteme)
