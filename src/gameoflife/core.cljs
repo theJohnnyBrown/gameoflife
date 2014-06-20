@@ -28,7 +28,6 @@
    (update-in @game-atom [:paused] not)))
 
 (defn planck! []
-  (.log js/console "step")
   (when-not (:paused @game-atom)
       (reset! game-atom
             (update-in @game-atom [:board] next-board))))
