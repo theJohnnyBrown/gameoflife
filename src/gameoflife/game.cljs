@@ -55,8 +55,4 @@
                                  (= cell "1")))))]
              (println (str (-> board next-board serialize-board)))))))))
 
-(defn deleteme []
-  (enable-console-print!)
-  (println (serialize-board (create-board 5 5 #{[0 0]}))))
-
-(set! *main-cli-fn* deleteme)
+(set! *main-cli-fn* run-cli)
