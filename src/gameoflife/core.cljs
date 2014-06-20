@@ -7,38 +7,49 @@
 (def game-atom (atom {:paused true
                       :board (create-board 12 12)}))
 
-
-(def blinker #{[1 1] [1 2] [1 3]})
-(def glider #{[0 3] [1 3] [2 3] [2 2] [1 1]})
-(defn set-pattern! [pattern]
-  (reset! game-atom (assoc @game-atom
-                      :board (create-board 12 12 pattern))))
-
-(defn set-glider! [] (set-pattern! glider))
-(defn set-blinker! [] (set-pattern! blinker))
-
 (defn frankenstein! [[row col]]
   "because we're giving life. Badump-tshh."
   (reset! game-atom
    (update-in @game-atom [:board row col] (constantly true))))
 
-(defn clear-board! [] (set-pattern! #{}))
+(def blinker #{[1 1] [1 2] [1 3]})
+(def glider #{[0 3] [1 3] [2 3] [2 2] [1 1]})
+(defn set-pattern! [pattern]
+  (reset! game-atom (assoc @game-atom :board (create-board 12 12 pattern))))
+
+(defn set-glider! [] (set-pattern! glider))
+(defn set-blinker! [] (set-pattern! blinker))
+
+(defn clear-board! []
+  (reset! game-atom (assoc @game-atom :board (create-board 12 12))))
 
 (defn toggle-playstate! [e]
   (reset! game-atom
    (update-in @game-atom [:paused] not)))
 
 (defn planck! []
+  (.log js/console "step")
   (when-not (:paused @game-atom)
       (reset! game-atom
             (update-in @game-atom [:board] next-board))))
 
-(defn board-cell [active rownum colnum]
-  (dom/div #js {:className "col-md-1"}
-           (dom/button
-            #js {:onClick #(frankenstein! [rownum colnum])
-                 :className "btn"}
-            (str (if active "X" "")))))
+(defn board-cell [[active rownum colnum]]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/div #js {:className "col-md-1"}
+               (dom/button
+                #js {:onClick #(frankenstein! [rownum colnum])
+                     :className "btn"}
+                (str (if active "X" "")))))))
+
+(defn board-row [[row-cursor rownum]]
+  (reify
+    om/IRender
+    (render [this]
+      (apply dom/div #js {:className "row board-row"}
+        (om/build-all board-cell row-cursor
+         {:fn (fn [cursor i] [cursor rownum i])})))))
 
 (defn display-board [{:keys [board paused]}]
   (dom/div
@@ -72,10 +83,9 @@
                              :position "relative"}}
             (apply dom/div #js {:style #js {:position "absolute"
                                             :top 0 :left 0 :bottom 0 :right 0}}
-                   (for [[rownum row] (enumerate board)]
-                     (apply dom/div #js {:className "row board-row"}
-                            (for [[colnum cell] (enumerate row)]
-                              (board-cell cell rownum colnum))))))))
+                    (om/build-all board-row board
+                                  {:fn (fn [cursor i] [cursor i])})))))
+
 
 (defn setup-ui! []
   (om/root
@@ -84,4 +94,4 @@
    {:target (.-body js/document)}))
 
 (defn ^:export start []
-  (setup-ui!) (js/setInterval planck! 200))
+  (setup-ui!) (js/setInterval planck! 500))
